@@ -9,16 +9,56 @@ namespace ChessConsole
         {
             Console.CursorVisible = false;
             ConsoleGraphics graphics = new ConsoleGraphics();
-            game = new ChessGame();
+            bool invalid = true;
+            int num = 0;
 
-            do
+            while(invalid)
             {
-                game.Draw(graphics);
-                graphics.SwapBuffers();
-                game.Update();
-            } while (game.Running);
+                Console.WriteLine("1.) Chess");
+                Console.WriteLine("2.) Chess 960");
+                Console.Write("Choose your mode: ");
+                string input = Console.ReadLine();
 
-            Console.Read();
+                try
+                {
+                    num = Int32.Parse(input);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Invalid int.");
+                }
+
+                if (num > 0 && num < 3)
+                {
+                    invalid = false;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid int.");
+                }
+            }
+            
+            if(num == 1)
+            {
+                game = new ChessGame(num);
+                do
+                {
+                    game.Draw(graphics);
+                    graphics.SwapBuffers();
+                    game.Update();
+                } while (game.Running);
+                Console.Read();
+            } else if(num == 2)
+            {
+                game = new ChessGame(num);
+                do
+                {
+                    game.Draw(graphics);
+                    graphics.SwapBuffers();
+                    game.Update();
+                } while (game.Running);
+                Console.Read();
+            }
         }
     }
 }

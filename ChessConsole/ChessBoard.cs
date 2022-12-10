@@ -126,10 +126,17 @@ namespace ChessConsole
         /// </summary>
         private bool inCheck;
 
-        public ChessBoard()
+        public ChessBoard(int i)
         {
-            Reset();
+            if(i == 1)
+            {
+                Reset();
+            } else if(i == 2)
+            {
+                Reset960();
+            }
         }
+
 
         #region Getters
 
@@ -225,6 +232,159 @@ namespace ChessConsole
             {
                 piece.Recalculate();
             }
+        }
+
+        public void Reset960()
+        {
+            cells = new Cell[8, 8];
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    cells[i, j] = new Cell(this, i, j);
+                }
+            }
+
+            pieces.Clear();
+
+            EnPassant = null;
+            EnPassantCapture = null;
+
+            //Add 960 setup logic
+            bool whiteTileBishop = false;
+            int[] taken = new int[8];
+
+            //1st bishop
+            int r = getSlot(1, 9, taken);
+            taken[0] = r;
+            if (r % 2 == 1)
+            {
+                whiteTileBishop = true;
+            }
+
+            bool invalid = true;
+            //2nd bishop
+            do
+            {
+                r = getSlot(1, 9, taken);
+                if (r % 2 == 0 && whiteTileBishop)
+                {
+                    taken[1] = r;
+                    invalid = false;
+                }
+                else if (r % 2 == 1 && whiteTileBishop == false)
+                {
+                    taken[1] = r;
+                    invalid = false;
+                }
+            } while(invalid == true);
+
+            //1st rook
+            r = getSlot(1, 9, taken);
+            taken[2] = r;
+
+            bool invalid2 = true;
+            //2nd rook
+            do
+            {
+                r = getSlot(1, 9, taken);
+                if (r != taken[2] - 1 && r != taken[2] + 1)
+                {
+                    if (r < taken[2])
+                    {
+                        int sub = taken[2];
+                        taken[2] = r;
+                        taken[3] = sub;
+                    }
+                    else
+                    {
+                        taken[3] = r;
+                    }
+                    invalid2 = false;
+                }
+            } while (invalid2 == true);
+
+            //King
+            r = getSlot(taken[2], taken[3], taken);
+            taken[4] = r;
+
+            //Knights
+            r = getSlot(1, 9, taken);
+            taken[5] = r;
+            r = getSlot(1, 9, taken);
+            taken[6] = r;
+
+            //Queen
+            r = getSlot(1, 9, taken);
+            taken[7] = r;
+
+            //Piece setup
+            addPiece(cells[taken[0] - 1, 0], new Bishop(PlayerColor.White));
+            addPiece(cells[taken[1] - 1, 0], new Bishop(PlayerColor.White));
+            addPiece(cells[taken[2] - 1, 0], new Rook(PlayerColor.White));
+            addPiece(cells[taken[3] - 1, 0], new Rook(PlayerColor.White));
+            addPiece(cells[taken[4] - 1, 0], (whiteKing = new King(PlayerColor.White)));
+            addPiece(cells[taken[5] - 1, 0], new Knight(PlayerColor.White));
+            addPiece(cells[taken[6] - 1, 0], new Knight(PlayerColor.White));
+            addPiece(cells[taken[7] - 1, 0], new Queen(PlayerColor.White));
+
+            addPiece(cells[taken[0] - 1, 7], new Bishop(PlayerColor.Black));
+            addPiece(cells[taken[1] - 1, 7], new Bishop(PlayerColor.Black));
+            addPiece(cells[taken[2] - 1, 7], new Rook(PlayerColor.Black));
+            addPiece(cells[taken[3] - 1, 7], new Rook(PlayerColor.Black));
+            addPiece(cells[taken[4] - 1, 7], (blackKing = new King(PlayerColor.Black)));
+            addPiece(cells[taken[5] - 1, 7], new Knight(PlayerColor.Black));
+            addPiece(cells[taken[6] - 1, 7], new Knight(PlayerColor.Black));
+            addPiece(cells[taken[7] - 1, 7], new Queen(PlayerColor.Black));
+
+            //Pawn Setup
+            addPiece(cells[0, 1], new Pawn(PlayerColor.White));
+            addPiece(cells[1, 1], new Pawn(PlayerColor.White));
+            addPiece(cells[2, 1], new Pawn(PlayerColor.White));
+            addPiece(cells[3, 1], new Pawn(PlayerColor.White));
+            addPiece(cells[4, 1], new Pawn(PlayerColor.White));
+            addPiece(cells[5, 1], new Pawn(PlayerColor.White));
+            addPiece(cells[6, 1], new Pawn(PlayerColor.White));
+            addPiece(cells[7, 1], new Pawn(PlayerColor.White));
+
+            addPiece(cells[0, 6], new Pawn(PlayerColor.Black));
+            addPiece(cells[1, 6], new Pawn(PlayerColor.Black));
+            addPiece(cells[2, 6], new Pawn(PlayerColor.Black));
+            addPiece(cells[3, 6], new Pawn(PlayerColor.Black));
+            addPiece(cells[4, 6], new Pawn(PlayerColor.Black));
+            addPiece(cells[5, 6], new Pawn(PlayerColor.Black));
+            addPiece(cells[6, 6], new Pawn(PlayerColor.Black));
+            addPiece(cells[7, 6], new Pawn(PlayerColor.Black));
+
+            foreach (Piece piece in pieces)
+            {
+                piece.Recalculate();
+            }
+
+        }
+
+        public int getSlot(int min, int max,  int[] taken)
+        {
+            Random rand = new Random();
+            int r;
+            bool invalid = false;
+
+            do
+            {
+                r = rand.Next(min, max);
+                invalid = false;
+
+                for (int i = 0; i < taken.Length; i++)
+                {
+                    if (r == taken[i])
+                    {
+                        invalid = true;
+                        break;
+                    }
+                }
+            } while (invalid == true);
+            
+            return r;
         }
 
         /// <summary>
